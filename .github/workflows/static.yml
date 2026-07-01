@@ -1,0 +1,43 @@
+# Telegram Clone - GitHub Actions Deployment
+# This workflow builds and deploys the frontend to GitHub Pages
+# The backend must be deployed separately (see DEPLOYMENT.md)
+
+name: Deploy Telegram Clone
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          # Set your backend API URL here or in GitHub Secrets
+          VITE_API_URL: ${{ secrets.API_URL || 'https://your-backend-api.com' }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Change this to your custom domain if you have one
+          # cname: telegram-clone.yourdomain.com
+          force_orphan: true
